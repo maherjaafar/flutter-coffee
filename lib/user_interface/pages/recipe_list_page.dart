@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter_coffee/core/models/Recipe.dart';
+import 'package:flutter_coffee/core/models/recipe.dart';
+import 'package:flutter_coffee/core/services/recipe_service.dart';
 import 'package:flutter_coffee/user_interface/configuration/configuration.dart';
+import 'package:flutter_coffee/user_interface/shared/widgets/widgets.dart';
 
 class RecipeListPage extends StatelessWidget {
   const RecipeListPage({Key? key}) : super(key: key);
@@ -17,36 +18,49 @@ class RecipeListPage extends StatelessWidget {
       ),
       body: Container(
         color: Colors.black,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final maxWidth = constraints.maxWidth;
-            final itemCount = Recipe.recipes.length;
-            if (maxWidth < 600)
-              return ListView.builder(
-                itemCount: itemCount,
-                itemBuilder: _itemBuilder,
-              );
-            else
-              return Container(
-                width: maxWidth,
-                height: constraints.maxHeight,
-                child: GridView.builder(
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 6,
-                      crossAxisSpacing: 4.0,
-                      mainAxisSpacing: 4.0),
-                  itemBuilder: _itemBuilder,
-                  itemCount: itemCount,
-                ),
-              );
-          },
-        ),
+        child: FutureBuilder<List<Recipe>>(
+            future: RecipeServiceRepositoryImplemetaion().loadRecipes(),
+            initialData: <Recipe>[],
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.done) {
+                final data = snapshot.data!;
+
+                return LayoutBuilder(
+                  builder: (context, constraints) {
+                    final maxWidth = constraints.maxWidth;
+                    final itemCount = data.length;
+                    if (maxWidth < 600)
+                      return ListView.builder(
+                        itemCount: itemCount,
+                        itemBuilder: (context, index) =>
+                            _itemBuilder(context, data[index]),
+                      );
+                    else
+                      return Container(
+                        width: maxWidth,
+                        height: constraints.maxHeight,
+                        child: GridView.builder(
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 6,
+                                  crossAxisSpacing: 4.0,
+                                  mainAxisSpacing: 4.0),
+                          itemBuilder: (context, index) =>
+                              _itemBuilder(context, data[index]),
+                          itemCount: itemCount,
+                        ),
+                      );
+                  },
+                );
+              } else
+                return CenteredProgressIndicator();
+            }),
       ),
     );
   }
 
-  Widget _itemBuilder(context, index) {
-    return buildRecipeCard(Recipe.recipes[index]);
+  Widget _itemBuilder(context, Recipe recipeItem) {
+    return buildRecipeCard(recipeItem);
   }
 
   Widget buildRecipeCard(Recipe recipe) {
@@ -68,18 +82,21 @@ class RecipeListPage extends StatelessWidget {
                 ),
               ),
               Positioned(
-                bottom: 0,
+                bottom: 5,
+                left: 5,
                 child: Container(
+                  width: 270,
                   margin: EdgeInsets.all(4.0),
-                  padding: EdgeInsets.all(4.0),
+                  padding: EdgeInsets.all(5.0),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.4),
+                    color: Colors.black.withOpacity(0.7),
                     borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(10),
+                      bottomLeft: Radius.circular(10),
                     ),
                   ),
                   child: Text(
                     recipe.label,
+                    softWrap: true,
                     style: AppTheme.lightTextTheme.headline6!
                         .copyWith(color: Colors.white),
                   ),

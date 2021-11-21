@@ -7,6 +7,10 @@ class Recipe {
   final String label;
   final String? imageUrl;
 
+  Recipe.fromJson(Map<String, dynamic> json)
+      : label = json['label'],
+        imageUrl = json['image'];
+
   static final recipes = <Recipe>[
     const Recipe(
         label: 'Pizza',
